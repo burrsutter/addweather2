@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:camel="http://camel.apache.org/schema/blueprint"
+       xsi:schemaLocation="
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+  <bean id="helloBean" class="com.burrsutter.addweather2.HelloBean">
+      <property name="say" value="Hi from Camel"/>
+  </bean>
+
+  <camelContext trace="false" id="blueprintContext" xmlns="http://camel.apache.org/schema/blueprint">
+    <route customId="true" id="addWeather">
+        <from uri="amq:queue:contextualtweets"/>
+        <log message="BEFORE ${body}"/>
+        <log message="LOCATION ${header.tweetlocation}"/>
+                
+        
+        <recipientList>
+           <simple>weather:burrfu?location=${header.tweetlocation}%26mode=XML%26units=IMPERIAL</simple>
+        </recipientList>
+        
+        <log message="AFTER ${body}"/>
+        <setHeader headerName="tweetTemperature">
+            <xpath resultType="java.lang.String">
+        	/current/temperature/@value
+        </xpath>
+        </setHeader>
+        <setHeader headerName="tweetMinTemperature">
+            <xpath resultType="java.lang.String">
+        	/current/temperature/@min
+        </xpath>
+        </setHeader>
+        <setHeader headerName="tweetMaxTemperature">
+            <xpath resultType="java.lang.String">
+        	/current/temperature/@max
+        </xpath>
+        </setHeader>
+        <setHeader headerName="tweetClouds">
+            <xpath resultType="java.lang.String">
+        	/current/clouds/@name
+        </xpath>
+        </setHeader>
+        <log message="TEMP ${header.tweetTemperature}"/>
+        <log message="Min TEMP ${header.tweetMinTemperature}"/>
+        <log message="Max TEMP ${header.tweetMaxTemperature}"/>
+        <log message="Clouds ${header.tweetClouds}"/>
+    </route>
+</camelContext>
+
+</blueprint>
